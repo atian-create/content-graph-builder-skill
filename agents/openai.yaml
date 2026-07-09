@@ -1,6 +1,6 @@
 interface:
   display_name: "Content Graph Builder"
-  short_description: "Turn chats, notes, and project files into a Markdown knowledge graph"
-  default_prompt: "Use $content-graph-builder to build or update a content graph from my notes, chats, and project materials."
+  short_description: "Turn chats, notes, and project files into a Markdown graph with an optional visual viewer"
+  default_prompt: "Use $content-graph-builder to build or update a content graph from my notes, chats, and project materials, then export viewer-ready graph JSON if useful."
 policy:
   allow_implicit_invocation: true

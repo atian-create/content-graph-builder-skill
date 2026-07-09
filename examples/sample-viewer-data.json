@@ -1,0 +1,97 @@
+{
+  "title": "Sample Creator Content Graph",
+  "groups": {
+    "core": { "label": "Core", "color": "#185c47" },
+    "boundary": { "label": "Boundary", "color": "#2f8f6b" },
+    "asset": { "label": "Assets", "color": "#4b9d8c" },
+    "gap": { "label": "Gaps", "color": "#d66d8d" },
+    "deliverable": { "label": "Deliverables", "color": "#8f7656" },
+    "signal": { "label": "Signals", "color": "#bc6e9e" }
+  },
+  "nodes": [
+    {
+      "id": "brain",
+      "label": "Content Brain",
+      "group": "core",
+      "x": 600,
+      "y": 360,
+      "size": 86,
+      "kind": "central",
+      "desc": "A visible map of repeated ideas, source signals, content assets, gaps, and next deliverables.",
+      "actions": ["Add three real source summaries", "Review gaps weekly", "Turn one strong node into a public draft"]
+    },
+    {
+      "id": "boundaries",
+      "label": "Content Boundary",
+      "group": "boundary",
+      "x": 340,
+      "y": 190,
+      "size": 54,
+      "desc": "The rules for what can be public, private, uncertain, or still a hypothesis.",
+      "actions": ["Write public/private boundaries", "Mark weak claims as hypotheses"]
+    },
+    {
+      "id": "assets",
+      "label": "Reusable Assets",
+      "group": "asset",
+      "x": 410,
+      "y": 610,
+      "size": 54,
+      "desc": "Existing posts, talks, notes, screenshots, and drafts that can become future material.",
+      "actions": ["List reusable assets", "Tag each asset with possible platforms"]
+    },
+    {
+      "id": "gaps",
+      "label": "Current Gaps",
+      "group": "gap",
+      "x": 820,
+      "y": 520,
+      "size": 54,
+      "desc": "Important missing pieces that block the graph from becoming useful work.",
+      "actions": ["Choose one gap to close this week", "Link gaps to deliverables"]
+    },
+    {
+      "id": "deliverables",
+      "label": "Next Deliverables",
+      "group": "deliverable",
+      "x": 840,
+      "y": 220,
+      "size": 56,
+      "desc": "The posts, articles, courses, templates, skills, or reports that can come from graph nodes.",
+      "actions": ["Pick one deliverable", "Define output format and audience"]
+    },
+    {
+      "id": "signals",
+      "label": "Public Signals",
+      "group": "signal",
+      "x": 600,
+      "y": 115,
+      "size": 52,
+      "desc": "Public observations from platforms, comments, benchmarks, and trend notes.",
+      "actions": ["Summarize one signal source", "Translate it into your own language"]
+    },
+    { "id": "chat-thread", "label": "Chat Thread", "group": "asset", "x": 205, "y": 535, "w": 120, "desc": "A source conversation that keeps producing repeated ideas." },
+    { "id": "weekly-review", "label": "Weekly Review", "group": "deliverable", "x": 1010, "y": 160, "w": 128, "desc": "A recurring report that names new signals, graph updates, gaps, and next actions." },
+    { "id": "surprise-pool", "label": "Surprise Pool", "group": "gap", "x": 990, "y": 600, "w": 126, "desc": "A place to collect useful non-obvious links between distant nodes." },
+    { "id": "public-post", "label": "Public Post", "group": "deliverable", "x": 1010, "y": 280, "w": 110, "desc": "A focused public explanation of one useful workflow insight." },
+    { "id": "private-notes", "label": "Private Notes", "group": "boundary", "x": 170, "y": 210, "w": 116, "desc": "Sensitive source material that can inspire mechanisms without being published." },
+    { "id": "comment-signal", "label": "Comment Signal", "group": "signal", "x": 690, "y": 40, "w": 128, "desc": "A repeated public question or objection that points to a content opportunity." }
+  ],
+  "edges": [
+    { "source": "brain", "target": "boundaries", "label": "sets rules", "type": "primary" },
+    { "source": "brain", "target": "assets", "label": "organizes", "type": "primary" },
+    { "source": "brain", "target": "gaps", "label": "reveals", "type": "primary" },
+    { "source": "brain", "target": "deliverables", "label": "creates", "type": "primary" },
+    { "source": "brain", "target": "signals", "label": "absorbs", "type": "primary" },
+    { "source": "assets", "target": "chat-thread", "label": "", "type": "support" },
+    { "source": "deliverables", "target": "weekly-review", "label": "", "type": "support" },
+    { "source": "gaps", "target": "surprise-pool", "label": "", "type": "support" },
+    { "source": "deliverables", "target": "public-post", "label": "", "type": "support" },
+    { "source": "boundaries", "target": "private-notes", "label": "", "type": "support" },
+    { "source": "signals", "target": "comment-signal", "label": "", "type": "support" },
+    { "source": "private-notes", "target": "public-post", "label": "surprise: private mechanism becomes public workflow", "type": "surprise" },
+    { "source": "comment-signal", "target": "weekly-review", "label": "surprise: comments become review questions", "type": "surprise" },
+    { "source": "chat-thread", "target": "surprise-pool", "label": "surprise: repeated chat becomes a connection pool", "type": "surprise" }
+  ],
+  "deposits": ["brain", "assets", "weekly-review", "public-post"]
+}

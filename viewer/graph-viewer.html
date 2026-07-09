@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Content Graph Viewer</title>
+  <style>
+    :root {
+      --ink: #173c35;
+      --green: #2f8f6b;
+      --green-dark: #185c47;
+      --pink: #f08cab;
+      --pink-soft: #ffe7ef;
+      --gold: #c79a2d;
+      --paper: #fff9fb;
+      --line: #d7eadf;
+      --muted: #65776e;
+      --text: #183b33;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: linear-gradient(135deg, #e8fbf2, #fff3f7 48%, #fff);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 300px minmax(640px, 1fr) 380px;
+      min-height: 100vh;
+    }
+
+    .rail {
+      background: linear-gradient(180deg, rgba(240, 140, 171, .16), transparent 34%), var(--green-dark);
+      color: #f4fff9;
+      padding: 22px 18px;
+      overflow: auto;
+    }
+
+    .brand {
+      display: grid;
+      gap: 5px;
+      margin-bottom: 22px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .brand p {
+      margin: 0;
+      color: rgba(244, 255, 249, .68);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .rail-heading {
+      margin: 20px 0 9px;
+      color: #ffdce8;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .rail-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .rail-card, .nav-button {
+      width: 100%;
+      border: 1px solid rgba(255, 220, 232, .24);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .06);
+      color: #f4fff9;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .rail-card {
+      padding: 11px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .rail-card strong {
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .rail-card span {
+      color: rgba(244, 255, 249, .68);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .rail-card.surprise {
+      border-color: rgba(199, 154, 45, .74);
+      background: rgba(199, 154, 45, .16);
+      box-shadow: inset 3px 0 0 var(--gold);
+    }
+
+    .nav-button {
+      min-height: 38px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .rail-card:hover, .nav-button:hover, [data-active="true"] {
+      background: rgba(255, 231, 239, .15);
+      border-color: rgba(255, 220, 232, .75);
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: 68px 1fr;
+      min-width: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 249, 251, .88);
+      min-width: 0;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 180px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+    }
+
+    .search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .tool-button, .file-label {
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      padding: 0 12px;
+      white-space: nowrap;
+    }
+
+    .tool-button.primary {
+      border-color: var(--pink);
+      background: var(--pink-soft);
+      color: #8a3452;
+    }
+
+    .file-label input {
+      display: none;
+    }
+
+    .canvas-wrap {
+      padding: 16px;
+      min-height: 0;
+    }
+
+    .canvas {
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background:
+        linear-gradient(rgba(47, 143, 107, .05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 140, 171, .05) 1px, transparent 1px),
+        #fffefe;
+      background-size: 34px 34px;
+      box-shadow: 0 22px 70px rgba(28, 77, 62, .15);
+    }
+
+    .canvas-note {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 2;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 249, 251, .9);
+      color: var(--muted);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      user-select: none;
+    }
+
+    svg.dragging {
+      cursor: grabbing;
+    }
+
+    .edge {
+      fill: none;
+      stroke-linecap: round;
+      opacity: .46;
+      stroke-width: 1.7;
+    }
+
+    .edge.primary {
+      stroke-width: 2.5;
+    }
+
+    .edge.surprise {
+      stroke: var(--gold);
+      stroke-dasharray: 8 9;
+      opacity: .78;
+      stroke-width: 2.2;
+    }
+
+    .edge.dimmed, .node.dimmed {
+      opacity: .16;
+    }
+
+    .node {
+      cursor: pointer;
+    }
+
+    .node circle, .node rect {
+      transition: filter .16s ease, stroke-width .16s ease;
+    }
+
+    .node:hover circle, .node:hover rect, .node.active circle, .node.active rect {
+      filter: drop-shadow(0 8px 18px rgba(28, 77, 62, .22));
+      stroke-width: 2.4px;
+    }
+
+    .node text {
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      fill: var(--text);
+      font-weight: 750;
+      font-size: 13px;
+    }
+
+    .central text {
+      fill: #f4fff9;
+      font-size: 20px;
+      font-weight: 850;
+    }
+
+    .panel {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border-left: 1px solid var(--line);
+      background: rgba(255, 249, 251, .96);
+    }
+
+    .panel-header {
+      padding: 22px 22px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-kicker {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .panel-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    .panel-body {
+      overflow: auto;
+      padding: 18px 22px;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section h3 {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section p {
+      margin: 0;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .list li {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 10px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .list li.surprise {
+      border-color: rgba(199, 154, 45, .58);
+      background: #fff8df;
+      box-shadow: inset 3px 0 0 var(--gold);
+    }
+
+    @media (max-width: 1100px) {
+      body { overflow: auto; }
+      .app { grid-template-columns: 1fr; }
+      .rail { display: none; }
+      .main { min-height: 720px; }
+      .panel { border-left: 0; border-top: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="rail">
+      <div class="brand">
+        <h1>Content Graph Viewer</h1>
+        <p>A small local viewer for content brains, current gaps, surprising connections, and next deliverables.</p>
+      </div>
+
+      <div class="rail-heading">Deposits</div>
+      <div class="rail-list" id="depositNav"></div>
+
+      <div class="rail-heading">Surprising Connections</div>
+      <div class="rail-list" id="surpriseNav"></div>
+
+      <div class="rail-heading">Groups</div>
+      <div class="rail-list" id="groupNav"></div>
+    </aside>
+
+    <main class="main">
+      <header class="toolbar">
+        <label class="search">
+          <input id="searchInput" placeholder="Search nodes or descriptions" />
+        </label>
+        <button class="tool-button" id="allBtn">All</button>
+        <button class="tool-button primary" id="surpriseBtn">Surprises</button>
+        <button class="tool-button" id="centerBtn">Center</button>
+        <label class="file-label">
+          Import JSON
+          <input id="fileInput" type="file" accept="application/json,.json" />
+        </label>
+      </header>
+
+      <section class="canvas-wrap">
+        <div class="canvas">
+          <div class="canvas-note">Drag to pan. Scroll to zoom. Click a node for details.</div>
+          <svg id="graph" viewBox="0 0 1200 760" role="img" aria-label="Content graph"></svg>
+        </div>
+      </section>
+    </main>
+
+    <aside class="panel">
+      <div class="panel-header">
+        <div class="panel-kicker" id="panelKicker">Node</div>
+        <h2 class="panel-title" id="panelTitle">Content Brain</h2>
+      </div>
+      <div class="panel-body">
+        <section class="section">
+          <h3>Meaning</h3>
+          <p id="panelDesc"></p>
+        </section>
+        <section class="section">
+          <h3>Connected Nodes</h3>
+          <ul class="list" id="panelLinks"></ul>
+        </section>
+        <section class="section">
+          <h3>Next Actions</h3>
+          <ul class="list" id="panelActions"></ul>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const sampleData = {
+      title: "Sample Creator Content Graph",
+      groups: {
+        core: { label: "Core", color: "#185c47" },
+        boundary: { label: "Boundary", color: "#2f8f6b" },
+        asset: { label: "Assets", color: "#4b9d8c" },
+        gap: { label: "Gaps", color: "#d66d8d" },
+        deliverable: { label: "Deliverables", color: "#8f7656" },
+        signal: { label: "Signals", color: "#bc6e9e" }
+      },
+      nodes: [
+        { id: "brain", label: "Content Brain", group: "core", x: 600, y: 360, size: 86, kind: "central", desc: "A visible map of repeated ideas, source signals, content assets, gaps, and next deliverables.", actions: ["Add three real source summaries", "Review gaps weekly", "Turn one strong node into a public draft"] },
+        { id: "boundaries", label: "Content Boundary", group: "boundary", x: 340, y: 190, size: 54, desc: "The rules for what can be public, private, uncertain, or still a hypothesis.", actions: ["Write public/private boundaries", "Mark weak claims as hypotheses"] },
+        { id: "assets", label: "Reusable Assets", group: "asset", x: 410, y: 610, size: 54, desc: "Existing posts, talks, notes, screenshots, and drafts that can become future material.", actions: ["List reusable assets", "Tag each asset with possible platforms"] },
+        { id: "gaps", label: "Current Gaps", group: "gap", x: 820, y: 520, size: 54, desc: "Important missing pieces that block the graph from becoming useful work.", actions: ["Choose one gap to close this week", "Link gaps to deliverables"] },
+        { id: "deliverables", label: "Next Deliverables", group: "deliverable", x: 840, y: 220, size: 56, desc: "The posts, articles, courses, templates, skills, or reports that can come from graph nodes.", actions: ["Pick one deliverable", "Define output format and audience"] },
+        { id: "signals", label: "Public Signals", group: "signal", x: 600, y: 115, size: 52, desc: "Public observations from platforms, comments, benchmarks, and trend notes.", actions: ["Summarize one signal source", "Translate it into your own language"] },
+        { id: "chat-thread", label: "Chat Thread", group: "asset", x: 205, y: 535, w: 120, desc: "A source conversation that keeps producing repeated ideas." },
+        { id: "weekly-review", label: "Weekly Review", group: "deliverable", x: 1010, y: 160, w: 128, desc: "A recurring report that names new signals, graph updates, gaps, and next actions." },
+        { id: "surprise-pool", label: "Surprise Pool", group: "gap", x: 990, y: 600, w: 126, desc: "A place to collect useful non-obvious links between distant nodes." },
+        { id: "public-post", label: "Public Post", group: "deliverable", x: 1010, y: 280, w: 110, desc: "A focused public explanation of one useful workflow insight." },
+        { id: "private-notes", label: "Private Notes", group: "boundary", x: 170, y: 210, w: 116, desc: "Sensitive source material that can inspire mechanisms without being published." },
+        { id: "comment-signal", label: "Comment Signal", group: "signal", x: 690, y: 40, w: 128, desc: "A repeated public question or objection that points to a content opportunity." }
+      ],
+      edges: [
+        { source: "brain", target: "boundaries", label: "sets rules", type: "primary" },
+        { source: "brain", target: "assets", label: "organizes", type: "primary" },
+        { source: "brain", target: "gaps", label: "reveals", type: "primary" },
+        { source: "brain", target: "deliverables", label: "creates", type: "primary" },
+        { source: "brain", target: "signals", label: "absorbs", type: "primary" },
+        { source: "assets", target: "chat-thread", label: "", type: "support" },
+        { source: "deliverables", target: "weekly-review", label: "", type: "support" },
+        { source: "gaps", target: "surprise-pool", label: "", type: "support" },
+        { source: "deliverables", target: "public-post", label: "", type: "support" },
+        { source: "boundaries", target: "private-notes", label: "", type: "support" },
+        { source: "signals", target: "comment-signal", label: "", type: "support" },
+        { source: "private-notes", target: "public-post", label: "surprise: private mechanism becomes public workflow", type: "surprise" },
+        { source: "comment-signal", target: "weekly-review", label: "surprise: comments become review questions", type: "surprise" },
+        { source: "chat-thread", target: "surprise-pool", label: "surprise: repeated chat becomes a connection pool", type: "surprise" }
+      ],
+      deposits: ["brain", "assets", "weekly-review", "public-post"]
+    };
+
+    let data = sampleData;
+    let selectedId = "brain";
+    let onlySurprises = false;
+    const defaultViewport = { x: 0, y: 0, width: 1200, height: 760 };
+    const viewport = { ...defaultViewport };
+
+    const svg = document.getElementById("graph");
+
+    function nodeMap() {
+      return new Map(data.nodes.map((node) => [node.id, node]));
+    }
+
+    function groupOf(node) {
+      return data.groups[node.group] || { label: node.group, color: "#65776e" };
+    }
+
+    function setViewBox(box) {
+      Object.assign(viewport, box);
+      svg.setAttribute("viewBox", `${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`);
+    }
+
+    function visibleNodes() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const map = nodeMap();
+      const surpriseIds = new Set(data.edges.filter((edge) => edge.type === "surprise").flatMap((edge) => [edge.source, edge.target]));
+      return data.nodes.filter((node) => {
+        const textMatch = !q || node.label.toLowerCase().includes(q) || (node.desc || "").toLowerCase().includes(q);
+        const viewMatch = !onlySurprises || surpriseIds.has(node.id);
+        return textMatch && viewMatch && map.has(node.id);
+      });
+    }
+
+    function nodeBounds(node) {
+      if (node.kind === "central" || node.size) {
+        const radius = node.size || 46;
+        return { minX: node.x - radius, maxX: node.x + radius, minY: node.y - radius, maxY: node.y + radius };
+      }
+      const w = node.w || 118;
+      return { minX: node.x - w / 2, maxX: node.x + w / 2, minY: node.y - 22, maxY: node.y + 22 };
+    }
+
+    function centerVisible() {
+      const items = visibleNodes();
+      if (!items.length) return setViewBox(defaultViewport);
+      const bounds = items.map(nodeBounds);
+      let minX = Math.min(...bounds.map((item) => item.minX)) - 90;
+      let maxX = Math.max(...bounds.map((item) => item.maxX)) + 90;
+      let minY = Math.min(...bounds.map((item) => item.minY)) - 90;
+      let maxY = Math.max(...bounds.map((item) => item.maxY)) + 90;
+      const aspect = defaultViewport.width / defaultViewport.height;
+      let width = Math.max(300, maxX - minX);
+      let height = Math.max(220, maxY - minY);
+      if (width / height > aspect) {
+        const nextHeight = width / aspect;
+        minY -= (nextHeight - height) / 2;
+        height = nextHeight;
+      } else {
+        const nextWidth = height * aspect;
+        minX -= (nextWidth - width) / 2;
+        width = nextWidth;
+      }
+      setViewBox({ x: minX, y: minY, width, height });
+    }
+
+    function connectedIds(id) {
+      const ids = new Set([id]);
+      data.edges.forEach((edge) => {
+        if (edge.source === id) ids.add(edge.target);
+        if (edge.target === id) ids.add(edge.source);
+      });
+      return ids;
+    }
+
+    function pathFor(source, target) {
+      const dx = target.x - source.x;
+      const dy = target.y - source.y;
+      const mx = source.x + dx * .5;
+      const my = source.y + dy * .5;
+      const distance = Math.max(1, Math.hypot(dx, dy));
+      const curve = Math.min(78, Math.max(24, distance * .12));
+      const cx = mx - dy / distance * curve;
+      const cy = my + dx / distance * curve;
+      return `M ${source.x} ${source.y} Q ${cx} ${cy} ${target.x} ${target.y}`;
+    }
+
+    function renderGraph(shouldCenter = false) {
+      const map = nodeMap();
+      const visible = new Set(visibleNodes().map((node) => node.id));
+      const active = connectedIds(selectedId);
+      svg.innerHTML = `
+        <defs>
+          <radialGradient id="centralGradient" cx="42%" cy="34%" r="72%">
+            <stop offset="0%" stop-color="#2f8f6b" />
+            <stop offset="100%" stop-color="#185c47" />
+          </radialGradient>
+        </defs>
+      `;
+      const edgeLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const nodeLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      svg.append(edgeLayer, nodeLayer);
+
+      data.edges.forEach((edge) => {
+        if (onlySurprises && edge.type !== "surprise") return;
+        const source = map.get(edge.source);
+        const target = map.get(edge.target);
+        if (!source || !target || (!visible.has(source.id) && !visible.has(target.id))) return;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("class", `edge ${edge.type || "support"} ${active.has(source.id) && active.has(target.id) ? "" : "dimmed"}`);
+        path.setAttribute("stroke", edge.type === "surprise" ? "var(--gold)" : groupOf(source).color);
+        path.setAttribute("d", pathFor(source, target));
+        edgeLayer.appendChild(path);
+      });
+
+      visibleNodes().forEach((node) => {
+        const group = groupOf(node);
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", `node ${node.kind === "central" ? "central" : ""} ${node.id === selectedId ? "active" : ""} ${active.has(node.id) ? "" : "dimmed"}`);
+        g.setAttribute("transform", `translate(${node.x}, ${node.y})`);
+        g.addEventListener("click", () => {
+          selectedId = node.id;
+          updatePanel();
+          renderGraph();
+        });
+
+        if (node.kind === "central" || node.size) {
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("r", node.size || 48);
+          circle.setAttribute("fill", node.kind === "central" ? "url(#centralGradient)" : `${group.color}18`);
+          circle.setAttribute("stroke", node.kind === "central" ? "#ffe7ef" : group.color);
+          circle.setAttribute("stroke-width", "1.8");
+          g.appendChild(circle);
+        } else {
+          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          const w = node.w || 118;
+          rect.setAttribute("x", -w / 2);
+          rect.setAttribute("y", -19);
+          rect.setAttribute("width", w);
+          rect.setAttribute("height", 38);
+          rect.setAttribute("rx", "19");
+          rect.setAttribute("fill", "#fff");
+          rect.setAttribute("stroke", group.color);
+          rect.setAttribute("stroke-width", "1.3");
+          g.appendChild(rect);
+        }
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("y", node.kind === "central" ? 0 : 1);
+        text.textContent = node.label;
+        g.appendChild(text);
+        nodeLayer.appendChild(g);
+      });
+
+      if (shouldCenter) centerVisible();
+    }
+
+    function updatePanel() {
+      const map = nodeMap();
+      const node = map.get(selectedId) || data.nodes[0];
+      if (!node) return;
+      selectedId = node.id;
+      const group = groupOf(node);
+      document.getElementById("panelKicker").textContent = group.label;
+      document.getElementById("panelTitle").textContent = node.label;
+      document.getElementById("panelDesc").textContent = node.desc || "No description yet.";
+      const related = data.edges
+        .filter((edge) => edge.source === node.id || edge.target === node.id)
+        .map((edge) => {
+          const other = map.get(edge.source === node.id ? edge.target : edge.source);
+          return { label: other?.label || "Unknown", surprise: edge.type === "surprise", edgeLabel: edge.label || edge.type || "related" };
+        });
+      document.getElementById("panelLinks").innerHTML = related.length
+        ? related.map((item) => `<li class="${item.surprise ? "surprise" : ""}"><strong>${item.label}</strong><br>${item.edgeLabel}</li>`).join("")
+        : "<li>No direct links yet.</li>";
+      document.getElementById("panelActions").innerHTML = (node.actions || ["Add a next action for this node."])
+        .map((item) => `<li>${item}</li>`).join("");
+    }
+
+    function renderRail() {
+      const map = nodeMap();
+      const depositIds = data.deposits || data.nodes.slice(0, 4).map((node) => node.id);
+      document.getElementById("depositNav").innerHTML = depositIds
+        .map((id) => map.get(id))
+        .filter(Boolean)
+        .map((node) => `<button class="rail-card" data-node="${node.id}"><strong>${node.label}</strong><span>${node.desc || ""}</span></button>`)
+        .join("");
+      document.getElementById("surpriseNav").innerHTML = data.edges
+        .filter((edge) => edge.type === "surprise")
+        .map((edge) => {
+          const source = map.get(edge.source);
+          const target = map.get(edge.target);
+          return `<button class="rail-card surprise" data-node="${edge.source}"><strong>${source?.label || edge.source} -> ${target?.label || edge.target}</strong><span>${edge.label || "surprising connection"}</span></button>`;
+        })
+        .join("");
+      document.getElementById("groupNav").innerHTML = Object.entries(data.groups)
+        .map(([key, group]) => `<button class="nav-button" data-group="${key}"><span>${group.label}</span><span>${data.nodes.filter((node) => node.group === key).length}</span></button>`)
+        .join("");
+      document.querySelectorAll("[data-node]").forEach((button) => {
+        button.addEventListener("click", () => {
+          selectedId = button.dataset.node;
+          updatePanel();
+          renderGraph(true);
+        });
+      });
+    }
+
+    function initInteractions() {
+      let dragging = false;
+      let last = null;
+      svg.addEventListener("mousedown", (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        dragging = true;
+        last = { x: event.clientX, y: event.clientY };
+        svg.classList.add("dragging");
+      });
+      window.addEventListener("mousemove", (event) => {
+        if (!dragging || !last) return;
+        const rect = svg.getBoundingClientRect();
+        const dx = (event.clientX - last.x) * viewport.width / rect.width;
+        const dy = (event.clientY - last.y) * viewport.height / rect.height;
+        last = { x: event.clientX, y: event.clientY };
+        setViewBox({ x: viewport.x - dx, y: viewport.y - dy, width: viewport.width, height: viewport.height });
+      });
+      window.addEventListener("mouseup", () => {
+        dragging = false;
+        last = null;
+        svg.classList.remove("dragging");
+      });
+      svg.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        const rect = svg.getBoundingClientRect();
+        const pointX = viewport.x + (event.clientX - rect.left) / rect.width * viewport.width;
+        const pointY = viewport.y + (event.clientY - rect.top) / rect.height * viewport.height;
+        const scale = event.deltaY > 0 ? 1.12 : .88;
+        const nextWidth = Math.min(1800, Math.max(220, viewport.width * scale));
+        const nextHeight = Math.min(1140, Math.max(140, viewport.height * scale));
+        setViewBox({
+          x: pointX - (pointX - viewport.x) * nextWidth / viewport.width,
+          y: pointY - (pointY - viewport.y) * nextHeight / viewport.height,
+          width: nextWidth,
+          height: nextHeight
+        });
+      }, { passive: false });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", () => renderGraph(true));
+    document.getElementById("allBtn").addEventListener("click", () => {
+      onlySurprises = false;
+      renderGraph(true);
+    });
+    document.getElementById("surpriseBtn").addEventListener("click", () => {
+      onlySurprises = true;
+      renderGraph(true);
+    });
+    document.getElementById("centerBtn").addEventListener("click", centerVisible);
+    document.getElementById("fileInput").addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      data = JSON.parse(await file.text());
+      selectedId = data.nodes[0]?.id || "";
+      onlySurprises = false;
+      renderRail();
+      updatePanel();
+      renderGraph(true);
+    });
+
+    renderRail();
+    updatePanel();
+    renderGraph(true);
+    initInteractions();
+  </script>
+</body>
+</html>

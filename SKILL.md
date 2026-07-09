@@ -29,6 +29,7 @@ Use this skill when the user wants to:
 - find content gaps and next actions
 - convert a graph node into public content or a product workflow
 - create a Markdown wiki that works with LLM Wiki, Obsidian, or other wikilink-aware tools
+- create a lightweight visual graph JSON for the included static viewer
 
 ## Not For
 
@@ -68,6 +69,14 @@ content-graph-project/
     └── log.md
 ```
 
+If the user asks for a visual graph, also create:
+
+```text
+graph-data.json
+```
+
+Use the JSON shape in `references/visual-viewer.md` so it can be imported into `viewer/graph-viewer.html`.
+
 ## Workflow
 
 1. Inspect the user's current context and files. Do not infer private facts that are not present in provided or local materials.
@@ -81,6 +90,7 @@ content-graph-project/
    - surprising connection
    - deliverable recommendation
    - weekly sync report
+8. If a visual graph is requested, export a viewer-ready JSON file with sanitized node labels, short descriptions, edge types, and next actions.
 
 ## Node Quality Bar
 
@@ -132,5 +142,21 @@ When building a graph project, output:
 - `references/wiki-schema.md`
 - `references/sync-workflow.md`
 - `references/public-expression.md`
+- `references/visual-viewer.md`
 - `examples/sample-project/`
+- `examples/sample-viewer-data.json`
 - `templates/graph-project-template/`
+- `viewer/graph-viewer.html`
+
+## Public Sharing Boundary
+
+When preparing a graph for public sharing, publish the reusable workflow and sample data, not private archives.
+
+Remove:
+
+- private file paths
+- thread IDs
+- unpublished client, business, or personal details
+- raw diary or relationship material
+- internal delegation notes
+- claims about guaranteed growth, traffic, or viral outcomes
